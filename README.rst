@@ -32,6 +32,14 @@ From ``dftool``'s description:
     Unlike most common fitting approaches, this method accurately accounts for measurement is uncertainties and complex
     selection functions. A full description of the algorithm can be found in Obreschkow et al. (2017).
 
+In short, clean out Eddington bias from your fits:
+
+<img src="https://user-images.githubusercontent.com/1272030/31757852-60cb6ebc-b4dd-11e7-8ce9-32b3232e8f94.png" width="90%"></img>
+
+.. image:: https://url/path/to/image
+   :height: 100px
+   :width: 200 px
+   :scale: 50 %
 
 * Free software: MIT license
 * Documentation: https://pydftools.readthedocs.io.
