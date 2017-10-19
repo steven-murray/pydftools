@@ -25,11 +25,12 @@ while being as Pythonic as possible. Do note that 2D+ models are not yet impleme
 are non-parametric models. Hopefully they will be along soon.
 
 From ``dftool``'s description:
-> Description: This package can find the most likely P parameters of a D-dimensional distribution function (DF) generating
-> N objects, where each object is specified by D observables with measurement uncertainties. For instance, if the objects
-> are galaxies, it can fit a MF (P=1), a mass-size distribution (P=2) or the mass-spin-morphology distribution (P=3).
-> Unlike most common fitting approaches, this method accurately accounts for measurement is uncertainties and complex
-> selection functions. A full description of the algorithm can be found in Obreschkow et al. (2017).
+
+    Description: This package can find the most likely P parameters of a D-dimensional distribution function (DF) generating
+    N objects, where each object is specified by D observables with measurement uncertainties. For instance, if the objects
+    are galaxies, it can fit a MF (P=1), a mass-size distribution (P=2) or the mass-spin-morphology distribution (P=3).
+    Unlike most common fitting approaches, this method accurately accounts for measurement is uncertainties and complex
+    selection functions. A full description of the algorithm can be found in Obreschkow et al. (2017).
 
 
 * Free software: MIT license
