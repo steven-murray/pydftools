@@ -7,7 +7,7 @@ import attr
 import numpy as np
 from cached_property import cached_property
 from scipy.optimize import minimize
-from .utils import deepcopy_with_sharing, numerical_jac, numerical_hess, centres_to_edges, sample_ellipsoid
+from .utils import numerical_jac, numerical_hess, centres_to_edges, sample_ellipsoid
 from .model import Model, Schechter
 from scipy.stats import poisson
 from .selection import Selection
@@ -809,7 +809,15 @@ class DFFit(object):
         cov_jn = np.cov(p_new[ok]) * (n_data - 1)
 
         # compute poisson covariance
-        jn = deepcopy_with_sharing(self, shared_attribute_names=['fit'])
+        jn = DFFit(data=self.data,
+                  selection=self.selection,
+                  grid_dx=self.grid_dx,
+                  model=self.model,
+                  n_iterations=self.n_iterations,
+                  keep_eddington_bias=self.keep_eddington_bias,
+                  correct_lss_bias=self.correct_lss_bias and lss_errors,
+                  lss_weight=self.lss_weight)
+
         jn.model.p0 = self.fit.p_best
         jn.options.n_iterations = 1
 
@@ -817,7 +825,7 @@ class DFFit(object):
         p_pois = np.empty((3,npar))
         for i in range(3):
             n_new = poisson.ppf(q[i], n_data)
-            jn.grid.Veff = self.grid.Veff * n_new / n_data
+            jn.grid.veff = self.grid.veff * n_new / n_data
             p_pois[i] = jn.fit.p_best
 
         cov_pois = np.cov(p_pois)

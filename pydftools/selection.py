@@ -140,8 +140,8 @@ class SelectionVeffPoints(Selection):
     veff_extrap: callable, optional
         A function of one variable, x, which defines the effective volume outside the observed limits.
     """
-    veff = attr.ib()
-    xval = attr.ib(convert = lambda x : np.atleast_2d(x).T)
+    veff = attr.ib(default=None)
+    xval = attr.ib(default=None, convert = lambda x : np.atleast_2d(x).T)
     veff_extrap = attr.ib(default=None, validator=attr.validators.optional(_callable_validator))
 
     @veff.validator
