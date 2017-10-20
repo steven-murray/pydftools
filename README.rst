@@ -34,9 +34,7 @@ From ``dftool``'s description:
 
 In short, clean out Eddington bias from your fits:
 
-<img src="https://user-images.githubusercontent.com/1272030/31757852-60cb6ebc-b4dd-11e7-8ce9-32b3232e8f94.png" width="90%"></img>
-
-.. image:: https://url/path/to/image
+.. image:: https://user-images.githubusercontent.com/1272030/31757852-60cb6ebc-b4dd-11e7-8ce9-32b3232e8f94.png
    :height: 100px
    :width: 200 px
    :scale: 50 %
