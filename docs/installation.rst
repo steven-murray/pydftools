@@ -40,11 +40,11 @@ Or download the `tarball`_:
 
     $ curl  -OL https://github.com/steven-murray/pydftools/tarball/master
 
-Once you have a copy of the source, you can install it with:
+Once you have a copy of the source, you can install it from the top-level directory with:
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ pip install .
 
 
 .. _Github repo: https://github.com/steven-murray/pydftools

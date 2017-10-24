@@ -26,7 +26,7 @@ are non-parametric models. Hopefully they will be along soon.
 
 From ``dftool``'s description:
 
-    Description: This package can find the most likely P parameters of a D-dimensional distribution function (DF) generating
+    This package can find the most likely P parameters of a D-dimensional distribution function (DF) generating
     N objects, where each object is specified by D observables with measurement uncertainties. For instance, if the objects
     are galaxies, it can fit a MF (P=1), a mass-size distribution (P=2) or the mass-spin-morphology distribution (P=3).
     Unlike most common fitting approaches, this method accurately accounts for measurement is uncertainties and complex
@@ -35,9 +35,7 @@ From ``dftool``'s description:
 In short, clean out Eddington bias from your fits:
 
 .. image:: https://user-images.githubusercontent.com/1272030/31757852-60cb6ebc-b4dd-11e7-8ce9-32b3232e8f94.png
-   :height: 100px
-   :width: 200 px
-   :scale: 50 %
+   :scale: 30 %
 
 * Free software: MIT license
 * Documentation: https://pydftools.readthedocs.io.

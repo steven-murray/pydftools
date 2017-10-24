@@ -25,6 +25,7 @@ class Model(object):
     --------
 
     Evaluate and plot a Schechter function
+
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
     >>> x = np.linspace(7,11,100)
@@ -36,12 +37,15 @@ class Model(object):
     >>> plt.yscale('log')
 
     Any model can be inspected before instantiation. Its default parameters are (using Schechter as an example):
+
     >>> Schechter._p0_default
 
     Its equation is
+
     >>> Schechter.gdf_equation
 
     And the names of its parameters are
+
     >>> Schechter.names_text
     """
 
@@ -54,12 +58,10 @@ class Model(object):
     "Latex-friendly parameters names"
     names = None
 
-    _p0_default = None
+    p0 = None
 
     def __init__(self, p0=None):
-        if p0 is None:
-            self.p0 = self._p0_default
-        else:
+        if p0 is not None:
             self.p0 = p0
 
         if not hasattr(self, "n_param"):
@@ -70,7 +72,7 @@ class Model(object):
             else:
                 raise ValueError("Model has not specified the number of parameters")
 
-    def gdf(self,x,p):
+    def gdf(self,x, p):
         """
         The generative distribution function.
 

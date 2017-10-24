@@ -1,14 +1,13 @@
-Welcome to pydftools's documentation!
-======================================
+.. include:: ../README.rst
 
-Contents:
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
-   readme
    installation
-   usage
+   examples
    modules
    contributing
    authors

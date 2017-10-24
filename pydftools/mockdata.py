@@ -45,16 +45,17 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
 
     Returns
     -------
-    data : :class:`~dffit.Data` instance
+    data : :class:`~.dffit.Data` instance
         A instance of `Data` ready to be passed to the fitting routine.
-    selection : :class:`~selection.Selection` instance
+    selection : :class:`~.selection.Selection` instance
         An instance of `Selection` containing selection function quantities. Note, this is not to be passed to
         :class:`~dfft.DFFit`, as in real situations, these quantities are unknown.
-    model : :class:`~model.Model` instance
+    model : :class:`~.model.Model` instance
         A `Model` instance defining the generative distribution used in this function (which can be directly passed
         to :class:`~dffit.DFFit` to fit to the mock data).
     other : dict
         A dictionary containing the following entries:
+
         * scd: function returning the expected source count density as a function of log-mass ``x``.
         * rescaling_factor: value of rescaling factor applied to the cosmic volume to match the requested number of galaxies ``n``.
         * n: number of galaxies in sample
@@ -67,10 +68,12 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
     --------
     Draw 1000 galaxies with mass errors of 0.3 dex from a Schechter function
     with parameters (-2,11,-1.3) and a preset selection function
+
     >>> import pydftools as df
     >>> data, selection, model, other = df.mockdata(n = 1000, sigma = 0.3)
 
     Plot the distance-log(mass) relation of observed data, true data, and approximate survey limit
+
     >>> import matplotlib.pyplot as plt
     >>> plt.scatter(data.r,data.x,color='blue')
     >>> plt.scatter(data.r,other['x_true'],color='green')
@@ -79,20 +82,24 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
 
     These data can then be used to fit a MF in several ways. For instance,
     assuming that the effective volume function Veff(x) is known:
+
     >>> selection_veff = df.selection.SelectionVeff(veff=selection.Veff)
     >>> survey = df.DFFit(data=data, selection=selection, model=model)
 
     Or assuming that Veff is known only on a galaxy-by-galaxy basis
+
     >>> selection_pts = df.selection.SelectionVeffPoints(xval = data.x, veff = selection.Veff(data.x))
     >>> survey = df.DFFit(data=data, selection=selection_pts,model=model)
 
     Or assuming that Veff is known on a galaxy-by-balaxy basis, but approximate analytically
     outside the range of observed galaxy masses
+
     >>> selection_pts_fnc = df.selection.SelectionVeffPoints(xval = data.x, veff = selection.Veff(data.x), veff_extrap=selection.Veff)
     >>> survey = df.DFFit(data=data, selection=selection_pts_fnc,model=model)
 
     Or assuming that the full selection function f(x,r) and the observing volume
     derivative dVdr(r) are known
+
     >>> survey = df.DFFit(data=data, selection=selection,model=model)
     """
     # Set default p

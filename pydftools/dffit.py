@@ -1,6 +1,6 @@
 """
-A module primarily defining the :class:`~DFFit` class, which brings together :class:`~Data`, :class:`~Grid`,
-:class:`~Selection` and :class:`~Model` to perform a parameter fit, using the MML method of Obreschkow et al., (2017).
+A module primarily defining the :class:`~DFFit` class, which brings together :class:`~Data`, :class:`~._Grid`,
+:class:`~.selection.Selection` and :class:`~.model.Model` to perform a parameter fit, using the MML method of Obreschkow et al., (2017).
 """
 
 import attr
@@ -126,7 +126,7 @@ class _Grid(object):
     Class of arrays with numerical evaluations of different functions on a grid in the D-dimensional observable space.
     This grid is used for numerical integrations and graphical representations.
 
-    Note that all attributes listed below are added by the `DFFit` class, and cannot be accessed otherwise.
+    Note that all attributes listed below are added by the :class:`~DFFit` class, and cannot be accessed otherwise.
 
     Parameters
     ----------
@@ -255,7 +255,7 @@ class DFFit(object):
 
     This object contains all the attributes and methods necessary to perform an MML fit for the parameters of a given
     model to given data, as well as several methods for resampling and bias correction. The object can be used as
-    input to plotting methods found in :module:`pydftools.plotting`.
+    input to plotting methods found in :module:`~.plotting`.
 
     Parameters
     ----------
@@ -300,27 +300,34 @@ class DFFit(object):
     >>> data, selection, model, other = dfmockdata(n=1000, sigma=0.5)
 
     Fit a Schechter function to the mock sample without accounting for errors
+
     >>> survey1 = df.DFFit(data=data, selection=selection, model=model, ignore_uncertainties=True)
 
     Plot fit and add a black dashed line showing the input MF
+
     >>> df.mfplot(survey1, xlim=c(1e6,2e12), ylim=c(2e-4,2), p = model.p0)
 
     Now, do the same again, while accountting for measurement errors in the fit
     This time, the posterior data, corrected for Eddington bias, is shown as black points
+
     >>> survey2 = df.DFFit(data=data, selection=selection, model=model)
     >>> mfplot(survey2,xlim=c(1e6,2e12), ylim=c(2e-4,2), p = model.p0)
 
     Now create a smaller survey of only 30 galaxies with 0.5dex mass errors
+
     >>> data, selection, model, other = dfmockdata(n=30, sigma=0.5)
 
     Fit a Schechter function and determine uncertainties by resampling the data
+
     >>> survey = df.DFFit(data=data, selection=selection, model=model)
     >>> survey.resample(n_bootstrap=30)
 
     Show best fit with 68% Gaussian uncertainties from Hessian and posterior data as black points
+
     >>> df.mfplot(survey, uncertainty_type = 1, p = model.p0)
 
     Show best fit with 68% and 95% resampling uncertainties and posterior data as black points
+
     >>> df.mfplot(survey, uncertainty_type = 3, p = model.p0)
     """
 
@@ -406,7 +413,7 @@ class DFFit(object):
             prior = np.ones(self.grid.n_points)
         else:
             # predicted source counts (up to a factor x.mesh.dv)
-            prior = self.model.gdf(*self.grid.x, p) * self.grid.veff
+            prior = self.model.gdf(*self.grid.x, p=p) * self.grid.veff
             prior[np.isinf(prior)] = 0
             np.clip(prior, 0, np.inf, out=prior)
 
@@ -467,7 +474,7 @@ class DFFit(object):
 
         # make -ln(L)
         def neglogL(p):
-            phi = self.model.gdf(*self.grid.x, p)
+            phi = self.model.gdf(*self.grid.x, p=p)
             # safety operations (adding about 50% computation time)
             phi[np.isinf(phi)] = 0
             mask = phi > 0
@@ -530,7 +537,7 @@ class DFFit(object):
 
             # make -ln(L)
             def neglogL(p):
-                phi = self.model.gdf(*self.grid.x, p)
+                phi = self.model.gdf(*self.grid.x, p=p)
                 # safety operations (adding about 50% computation time)
                 phi[np.isinf(phi)] = 0
                 mask = phi >0
@@ -541,7 +548,7 @@ class DFFit(object):
 
 
             # test
-            if np.all(np.isinf(self.model.gdf(*self.grid.x, p0))):
+            if np.all(np.isinf(self.model.gdf(*self.grid.x, p=p0))):
                 raise RuntimeError('cannot evaluate GDF at initial parameters provided')
             try:
                 test = neglogL(p0)
@@ -617,7 +624,7 @@ class DFFit(object):
                    )
 
         # UPDATE GRID
-        self.grid.gdf = self.model.gdf(*self.grid.x, opt.x)
+        self.grid.gdf = self.model.gdf(*self.grid.x, p=opt.x)
         self.grid.veff = self.selection.Veff(*self.grid.x)
         self.grid.scd = self.grid.gdf * self.grid.veff
 

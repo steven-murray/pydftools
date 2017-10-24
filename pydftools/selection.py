@@ -21,9 +21,9 @@ Using the three subclasses defined in this module, there are 5 ways of defining 
    outside of the observed domain.
 5. Using :class:`~SelectionRdep`, and supplying `f`, `dvdr`, `rmin` and `rmax`,
    where ``f(xval,r)`` is the isotropic selection function and ``dvdr(r)`` is the derivative of the total
-   survey volume as a function of comoving distance `r`. The scalars ``rmin`` and``rmax`` (can be ``0`` and
-  ``Inf``) are the minimum and maximum comoving distance limits of the survey. Outside these limits
-  ``Veff(x)=0`` will be assumed.
+   survey volume as a function of comoving distance `r`. The scalars ``rmin`` and ``rmax`` (can be ``0`` and
+   ``Inf``) are the minimum and maximum comoving distance limits of the survey. Outside these limits
+   ``Veff(x)=0`` will be assumed.
 
 """
 import attr
