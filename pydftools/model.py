@@ -112,7 +112,7 @@ class Schechter(Model):
     """
     A Schechter function model.
     """
-    _p0_default = (-2.,11.,-1.3)
+    p0 = (-2.,11.,-1.3)
     names_text = [
         'log_10 (phi_star)',
         'log_10 (M_star)',
@@ -152,7 +152,7 @@ class MRP(Model):
     """
     An MRP model (see Murray, Robotham, Power, 2017)
     """
-    _p0_default = (-2., 11., -1., 1)
+    p0 = (-2., 11., -1., 1)
     names_text = [
         'log_10 (phi_star)',
         'log_10 (M_star)',
@@ -175,7 +175,7 @@ class PL(Model):
     """
     A power-law model.
     """
-    _p0_default = (2.,-1.)
+    p0 = (2.,-1.)
     names_text = ( "log_10(A)", "alpha")
     names = (r'$\log_{10}A$', r'$\alpha$')
 

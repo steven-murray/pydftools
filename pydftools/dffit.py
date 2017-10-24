@@ -663,7 +663,7 @@ class DFFit(object):
         p_new = sample_ellipsoid(cov, nsteps, add_boundaries=True, mean =self.fit.p_best)
         y_new = np.zeros((self.grid.n_points, len(p_new)))
         for i,p in enumerate(p_new):
-            y_new[:,i] = self.model.gdf(*self.grid.x, p)
+            y_new[:,i] = self.model.gdf(*self.grid.x, p=p)
 
         # y_new = np.empty((nx, nsteps + 2 * npar))
         # for i in range(nsteps + 2 * npar):
@@ -794,7 +794,7 @@ class DFFit(object):
         # make DF quantiles
         s = np.empty((n_bootstrap, self.grid.n_points))
         for i in range(n_bootstrap):
-            s[i] = self.model.gdf(*self.grid.x, p_new[i])
+            s[i] = self.model.gdf(*self.grid.x, p=p_new[i])
 
         y_quant = np.empty((4, self.grid.n_points))
         for i in range(self.grid.n_points):
