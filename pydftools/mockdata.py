@@ -106,7 +106,7 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
     if p is None:
         p = model.p0
     if selection is None:
-        selection = SelectionRdep(xmin=4, xmax=13, rmin=0, rmax=20)
+        selection = SelectionRdep(xmin=4.0, xmax=13.0, rmin=0, rmax=20)
 
     # Check whether the model can be evaluated at p
     try:
@@ -146,16 +146,16 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
 
     # make actual number of sources
     if shot_noise:
-        n = max(1, np.random.poisson(n_expected))
+        n = int(max(1, np.random.poisson(n_expected)))
     else:
-        n = round(n_expected)
+        n = int(round(n_expected))
 
     if verbose:
         print('Number of sources in the mock survey (expected): %.3f'% n_expected)
         print('Number of sources in the mock survey (selected): %d'% n)
 
     # sample masses (x)
-    dx = min(0.005, (selection.xmax-selection.xmin) / 1000)
+    dx = min(0.005, (selection.xmax-selection.xmin) / 1000.)
     xgrid = np.arange(selection.xmin, selection.xmax, dx)
     cdf = np.cumsum(scd(xgrid))  # cumulative distribution function of source count density
 
