@@ -31,8 +31,8 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
         survey specifications, it suffices to vary this number.
     model : :class:`~model.Model` intance
         Defines the 'generative distribution function', i.e. the underlying mass function, from which the galaxies are drawn.
-    selection : :class:`~selection.Selection` instance
-        Defines the selection function. Any sub-class of :class:`~selection.Selection` may be used. See docstrings for more info.
+    selection : :class:`~.selection.Selection` instance
+        Defines the selection function. Any sub-class of :class:`~.selection.Selection` may be used. See docstrings for more info.
     p : tuple, optional
         Model parameters for the `model`.
     sigma : scalar or array-like
@@ -46,13 +46,13 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
     Returns
     -------
     data : :class:`~.dffit.Data` instance
-        A instance of `Data` ready to be passed to the fitting routine.
+        An instance of :class:`~.dffit.Data` ready to be passed to the fitting routine.
     selection : :class:`~.selection.Selection` instance
-        An instance of `Selection` containing selection function quantities. Note, this is not to be passed to
+        An instance of :class:`~.selection.Selection` containing selection function quantities. Note, this is not to be passed to
         :class:`~dfft.DFFit`, as in real situations, these quantities are unknown.
     model : :class:`~.model.Model` instance
-        A `Model` instance defining the generative distribution used in this function (which can be directly passed
-        to :class:`~dffit.DFFit` to fit to the mock data).
+        A :class:`~.model.Model` instance defining the generative distribution used in this function (which can be directly passed
+        to :class:`~.dffit.DFFit` to fit to the mock data).
     other : dict
         A dictionary containing the following entries:
 

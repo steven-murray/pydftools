@@ -85,6 +85,19 @@ class Selection(object):
         return np.zeros_like(x)
 
     def Veff(self, x):
+        """
+        The effective volume of the observation for a set of properties x.
+
+        Parameters
+        ----------
+        x : array-like
+            Either a 1D vector of an observed property, or a 2D vector, where the 2nd dimension corresponds to the different properties observed.
+
+        Returns
+        -------
+        V : array
+            A 1D vector, of the same length as x, giving the effective volume of the observation at that point in observation space.
+        """
         x = np.atleast_1d(x)
         # Return vol-renormed function of veff_extrap outside observed region, and veff_fnc inside it.
         return self.vol_renorm * np.where(np.logical_or(x<self.xmin, x > self.xmax),

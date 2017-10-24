@@ -22,7 +22,7 @@ class Data(object):
     Parameters
     ----------
     x : (N,D)-array
-        A DxN matrix (or N-element vector if D=1) containing the observed quantities of N objects (e.g. galaxies).
+        An NxD matrix (or N-element vector if D=1) containing the observed quantities of N objects (e.g. galaxies).
 
     x_err :  (N,D,[D])-array, optional
         Specifies the observational errors of ``x``. If ``x_err`` is a ``NxD`` matrix, the elements ``x_err[i,]`` are
@@ -94,14 +94,17 @@ class Data(object):
 
     @property
     def n_data(self):
+        "The number of observed objects"
         return self.x.shape[0]
 
     @property
     def n_dim(self):
+        "The number of properties of each object observed"
         return self.x.shape[1]
 
     @cached_property
     def invC(self):
+        "Inverse covariance of each datum, shape (N,D,D) with N the number of data, D the number of dimensions."
         # Make inverse covariances
         invC = np.empty((self.n_data, self.n_dim, self.n_dim))
         if len(self.x_err.shape) == 2:
@@ -213,7 +216,7 @@ class Posteriors(object):
 @attr.s
 class Fit(object):
     """
-    Describes the fitted generative distribution function. Its most important entries are:
+    A class describing a fitted generative distribution function. Its most important entries are:
 
     Parameters
     ----------
@@ -221,11 +224,7 @@ class Fit(object):
         A P-tuple giving the most likely model parameters according to the MML method.
     p_covariance : (P,P)-array
         The covariance matrix of the best-fitting parameters in the Gaussian approximation from the Hessian matrix of the modified likelihood function.
-    gdf : callable
-        A function of a D-dimensional vector, which is the generative DF, evaluated at the parameters ``p_best``
-    scd : callable
-        A function of a D-dimensional vector, which gives the predicted source counts of the most likely model,
-        i.e. ``scd(x)=gdf(x)*Veff(x)``
+    
     """
     p_best = attr.ib()
     p_covariance = attr.ib()
@@ -242,9 +241,14 @@ class Fit(object):
         return np.sqrt(np.diag(self.p_covariance))
 
     def gdf(self, x):
+        "A function of a D-dimensional vector, which is the generative DF, evaluated at the parameters ``p_best``"
         return self._gdf(x, self.p_best)
 
     def scd(self, x):
+        """
+        A function of a D-dimensional vector, which gives the predicted source counts of the most likely model,
+        i.e. ``scd(x)=gdf(x)*Veff(x)``
+        """
         return self._gdf(x, self.p_best) * self._veff(x)
 
 
@@ -255,14 +259,14 @@ class DFFit(object):
 
     This object contains all the attributes and methods necessary to perform an MML fit for the parameters of a given
     model to given data, as well as several methods for resampling and bias correction. The object can be used as
-    input to plotting methods found in :module:`~.plotting`.
+    input to plotting methods found in :mod:`~.plotting`.
 
     Parameters
     ----------
     data : :class:`~Data` instance
         Specifies the data to be fit.
     selection : :class:`~.selection.Selection` instance
-        An object defining a selection function appropriate for the data. See :module:`pydftools.selection` for more info.
+        An object defining a selection function appropriate for the data. See :mod:`~.selection` for more info.
     grid_dx : float, optional
         Specifies grid resolution for all grid integrations.
     model : :class:`~Model` instance
@@ -396,6 +400,7 @@ class DFFit(object):
 
     @cached_property
     def rho_observed(self):
+        "An (Ndata, Ngrid) array, giving the a priori probability that each observation i in Ndata has value x (from grid)."
         d = np.array([np.add.outer(-xgrid, xval) for xval, xgrid in
                       zip(self.data.x.T, self.grid.x)]).T  # has shape (N, Ngrid, Ndim)
         rho_observed = np.exp(-np.einsum("ijk, ikl, ijl -> ij", d, self.data.invC, d) / 2)
@@ -409,6 +414,19 @@ class DFFit(object):
         return rho_observed
 
     def rho_corrected(self, p):
+        """
+        Calculate the probability that each observation has value x, taking the distribution at point p into account
+        
+        Parameters
+        ----------
+        p : tuple
+            The parameters of the distribution with which to apply a correction.
+
+        Returns
+        -------
+        rho_corrected : array
+            An (Ndata, Ngrid) array giving the probability for each observation at each grid point x.
+        """
         if self.keep_eddington_bias:
             prior = np.ones(self.grid.n_points)
         else:
@@ -423,6 +441,19 @@ class DFFit(object):
         return rho_corrected.T
 
     def rho_unbiased(self, p):
+        """
+        Calculate the sum of probabilities of all observations having true value of x, taking the distribution into account.
+
+        Parameters
+        ----------
+        p : tuple
+            The parameters of the distribution with which to apply a correction.
+
+        Returns
+        -------
+        rho_unbiased : array
+            An (Ngrid)-array, giving the summed probabilities of each observation having true value x (from grid).
+        """
         if self.ignore_uncertainties:
             # Assign each obs to its nearest grid point
             rho_unbiased = np.histogramdd(self.data.x, bins=[centres_to_edges(x) for x in self.grid.x])[0]
@@ -494,21 +525,9 @@ class DFFit(object):
     @cached_property
     def fit(self):
         """
-        Perform the actual MML fit.
+        A :class:`~Fit` object, containing the fitted parameters from a Modified Maximum Likelihood fit to the data.
 
-        This function finds the most likely P-dimensional model parameters of a D-dimensional distribution function (DF)
-        generating an observed set of N objects with D-dimensional observables x, accounting for measurement uncertainties
-        and a user-defined selection function. For instance, if the objects are galaxies, \code{dffit} can fit a mass
-        function (D=1), a mass-size distribution (D=2) or the mass-spin-morphology distribution (D=3). A full description of
-        the algorithm can be found in Obreschkow et al. (2017).
-
-        Parameters
-        ----------
-        self
-
-        Returns
-        -------
-
+        This is evaluated lazily.
         """
         # Input handling
         if not self.correct_lss_bias:
@@ -670,10 +689,12 @@ class DFFit(object):
 
     @cached_property
     def gdf_gaussian_min(self):
+        "The minimum value of the generative distribution function at each gridded x, for any combination of parameters within 1-sigma of the best fit."
         return self._gaussian_errors[0]
 
     @cached_property
     def gdf_gaussian_max(self):
+        "The maximum value of the generative distribution function at each gridded x, for any combination of parameters within 1-sigma of the best fit."
         return self._gaussian_errors[1]
 
     def _refit_to_new_sample(self,n, do_jackknife=False, lss_errors=True):
@@ -855,7 +876,14 @@ class DFFit(object):
 
     @cached_property
     def posterior(self):
-        
+        """
+        A :class:`~Posteriors` object representing posterior density of each observed object.
+
+        Notes
+        -----
+        Creation of this object also adds some quantities to the :attr:`grid` attribute, notably
+        `scd_posterior` and `effective_counts`.
+        """
         if self.ignore_uncertainties:
             return None
 
@@ -892,7 +920,20 @@ class DFFit(object):
         return posterior
     
     def fit_summary(self, format_for_notebook=False):
+        """
+        Return a string summary of the fit.
 
+        Parameters
+        ----------
+        format_for_notebook : bool, optional
+            Whether the string should be formatted for printing in a Jupyter
+            notebook.
+
+        Returns
+        -------
+        fit_summary : str
+            A string summary of the fit.
+        """
         p = self.fit.p_best
 
         string = ""

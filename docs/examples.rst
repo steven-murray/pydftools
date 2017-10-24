@@ -8,4 +8,6 @@ Other examples can be found in the API documentation for each object or by looki
 .. toctree::
    :maxdepth: 2
 
-   example_notebooks/getting_started
+   example_notebooks/basic_example
+   example_notebooks/tutorial_1
+   example_notebooks/example_lss

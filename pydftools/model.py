@@ -58,6 +58,7 @@ class Model(object):
     "Latex-friendly parameters names"
     names = None
 
+    "Default value for p0 for the model"
     p0 = None
 
     def __init__(self, p0=None):
