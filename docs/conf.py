@@ -18,7 +18,7 @@ import os
 
 import mock
 
-MOCK_MODULES = ['numpy', 'scipy', 'chainconsumer', 'scipy.optimize', 'scipy.interpolate', 'scipy.integrate', 'scipy.stats']
+MOCK_MODULES = ['numpy', 'scipy', 'chainconsumer', 'scipy.optimize', 'scipy.interpolate', 'scipy.integrate', 'scipy.stats', 'scipy.special']
 sys.modules.update((mod_name, mock.Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another
