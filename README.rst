@@ -13,10 +13,6 @@ pydftools
         :target: https://pydftools.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/steven-murray/pydftools/shield.svg
-     :target: https://pyup.io/repos/github/steven-murray/pydftools/
-     :alt: Updates
-
 
 A pure-python port of the ``dftools`` R package.
 
