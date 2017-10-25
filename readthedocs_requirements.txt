@@ -4,3 +4,4 @@ cached_property
 mock
 numpydoc
 nbsphinx
+ipython
