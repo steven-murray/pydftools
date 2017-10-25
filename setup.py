@@ -4,6 +4,9 @@
 """The setup script."""
 
 from setuptools import setup, find_packages
+import io
+import os
+import re
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -21,6 +24,24 @@ requirements = [
     # TODO: put package requirements here
 ]
 
+def read(*names, **kwargs):
+    with io.open(
+        os.path.join(os.path.dirname(__file__), *names),
+        encoding=kwargs.get("encoding", "utf8")
+    ) as fp:
+        return fp.read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
+
 setup_requirements = [
     'pytest-runner',
     # TODO(steven-murray): put setup requirements (distutils extensions, etc.) here
@@ -33,7 +54,7 @@ test_requirements = [
 
 setup(
     name='pydftools',
-    version='0.0.1',
+    version=find_version("pydftools", "__init__.py"),
     description="A pure-python port of the dftools R package.",
     long_description=readme + '\n\n' + history,
     author="Steven Murray",
