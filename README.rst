@@ -13,6 +13,9 @@ pydftools
         :target: https://pydftools.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
+.. image:: https://coveralls.io/repos/github/steven-murray/pydftools/badge.svg?branch=master
+        :target: https://coveralls.io/github/steven-murray/pydftools?branch=master
+        :alt: Code Coverage
 
 A pure-python port of the ``dftools`` R package.
 
