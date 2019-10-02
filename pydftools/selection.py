@@ -133,7 +133,7 @@ class SelectionVeff(Selection):
         Default is 10 ** (2x).
     """
 
-    veff = attr.ib(lambda x: 10 ** (2 * x), convert=_veff_converter)
+    veff = attr.ib(lambda x: 10 ** (2 * x), converter=_veff_converter)
 
     @veff.validator
     def _veff_validator(self, att, val):
@@ -168,7 +168,7 @@ class SelectionVeffPoints(Selection):
     """
 
     veff = attr.ib(default=None)
-    xval = attr.ib(default=None, convert=lambda x: np.atleast_2d(x).T)
+    xval = attr.ib(default=None, converter=lambda x: np.atleast_2d(x).T)
     veff_extrap = attr.ib(
         default=None, validator=attr.validators.optional(_callable_validator)
     )
@@ -274,8 +274,8 @@ class SelectionRdep(Selection):
     )
     dvdr = attr.ib(default=lambda r: 2.13966 * r ** 2, validator=_callable_validator)
     g = attr.ib(default=None, validator=attr.validators.optional(_callable_validator))
-    rmin = attr.ib(default=0, convert=np.float)
-    rmax = attr.ib(default=20, convert=np.float)
+    rmin = attr.ib(default=0, converter=np.float)
+    rmax = attr.ib(default=20, converter=np.float)
 
     @rmax.validator
     def _rmax_validator(self, att, val):
