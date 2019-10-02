@@ -56,8 +56,8 @@ class Selection(object):
     __metaclass__ = ABCMeta
 
     vol_renorm = attr.ib(default=1.0)
-    xmax = attr.ib(default=20.0, convert=lambda x: np.atleast_1d(np.array(x)))
-    xmin = attr.ib(default=0.0, convert=lambda x: np.atleast_1d(np.array(x)))
+    xmax = attr.ib(default=20.0, converter=lambda x: np.atleast_1d(np.array(x)))
+    xmin = attr.ib(default=0.0, converter=lambda x: np.atleast_1d(np.array(x)))
 
     def __attrs_post_init__(self):
         x = np.linspace(self.xmin, self.xmax, 1000)
