@@ -5,23 +5,25 @@ Some handy utility functions used by the other modules.
 from copy import deepcopy
 import numpy as np
 
+
 def centres_to_edges(centres):
     "Assuming centres is regularly spaced, return bin edges"
     dx = centres[1] - centres[0]
-    return np.linspace(centres[0] - dx/2, centres[-1]+dx/2, len(centres)+1)
+    return np.linspace(centres[0] - dx / 2, centres[-1] + dx / 2, len(centres) + 1)
 
-def numerical_jac(func, args, dx=1e-5 ):
+
+def numerical_jac(func, args, dx=1e-5):
     if np.isscalar(dx):
-        dx = np.repeat(dx,len(args))
+        dx = np.repeat(dx, len(args))
 
     y0 = func(args)
-    out = [0]*len(args)
+    out = [0] * len(args)
     args = list(args)
     for i in range(len(args)):
         args[i] += dx[i]
 
         yy = func(args)
-        out[i] = (yy - y0)/dx[i]
+        out[i] = (yy - y0) / dx[i]
         args[i] -= dx[i]
     return np.array(out)
 
@@ -31,11 +33,11 @@ def numerical_hess(func, args, dx=1e-5):
         dx = np.repeat(dx, len(args))
 
     j0 = numerical_jac(func, args, dx)
-    out = [0]*len(args)
+    out = [0] * len(args)
     args = list(args)
     for i in range(len(args)):
         args[i] += dx[i]
-        out[i] = (numerical_jac(func, args, dx) - j0)/dx[i]
+        out[i] = (numerical_jac(func, args, dx) - j0) / dx[i]
         args[i] -= dx[i]
     return np.array(out)
 
@@ -70,32 +72,17 @@ def sample_ellipsoid(cov, size=1, add_boundaries=False, mean=None):
 
     if mean is None:
         mean = np.zeros(npar)
-    # sample surface of covariance ellipsoid
-    nsteps = size
-    v_new = np.zeros((npar, nsteps ))
 
     # Do random points
-    if size>0:
+    if size > 0:
         e = np.random.normal(size=(npar, size))
-        e /= np.sqrt(np.sum(e**2, axis=0))
+        e /= np.sqrt(np.sum(e ** 2, axis=0))
     else:
         e = np.zeros((npar, 0))
 
     if add_boundaries:
         e = np.concatenate((e.T, np.diag(np.ones(3))))
         e = np.concatenate((e, -np.diag(np.ones(3)))).T
-
-    # for i in range(nsteps + 2 * npar):
-    #     if i <= nsteps - 1:
-    #         e = np.random.normal(size=npar)
-    #         e /= np.sqrt(np.sum(e ** 2))
-    #     else:
-    #         e = np.zeros(npar)
-    #         if i > nsteps + npar - 1:
-    #             e[i - nsteps - npar] = 1
-    #         else:
-    #             e[i - nsteps] = -1
-
 
     v = np.array([np.matmul(eigvec, np.sqrt(eigval) * ei) for ei in e.T])
     return v + mean

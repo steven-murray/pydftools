@@ -73,7 +73,7 @@ class Model(object):
             else:
                 raise ValueError("Model has not specified the number of parameters")
 
-    def gdf(self,x, p):
+    def gdf(self, x, p):
         """
         The generative distribution function.
 
@@ -96,32 +96,25 @@ class Model(object):
         """
         The jacobian of the GDF as a function of x at point p.
         """
-        fnc = lambda p : self.gdf(x, p)
-        jac = numerical_jac(fnc, p)
+        jac = numerical_jac(lambda p: self.gdf(x, p), p)
         return jac
 
     def gdf_hessian(self, x, p):
         """
         The jacobian of the GDF as a function of x at point p.
         """
-        fnc = lambda p : self.gdf(x, p)
-        return numerical_hess(fnc, p)
+        return numerical_hess(lambda p: self.gdf(x, p), p)
 
 
 class Schechter(Model):
     """
     A Schechter function model.
     """
-    p0 = (-2.,11.,-1.3)
-    names_text = [
-        'log_10 (phi_star)',
-        'log_10 (M_star)',
-        'alpha'
-    ]
 
-    names = [r'$\log_{10} \phi_\star$',
-             r'$\log_{10} M_\star$',
-             r'$\alpha$']
+    p0 = (-2.0, 11.0, -1.3)
+    names_text = ["log_10 (phi_star)", "log_10 (M_star)", "alpha"]
+
+    names = [r"$\log_{10} \phi_\star$", r"$\log_{10} M_\star$", r"$\alpha$"]
 
     gdf_equation = r"$\frac{dN}{dVdx} = \log(10) \phi_\star \mu^{\alpha+1} \exp(-\mu)$, where $\mu = 10^{x - \log_{10} M_\star}$"
 
@@ -129,57 +122,63 @@ class Schechter(Model):
         mu = 10 ** (x - p[1])
         return np.log(10) * 10 ** p[0] * mu ** (p[2] + 1) * np.exp(-mu)
 
-    def gdf_jacobian(self,x,p):
-        g = self.gdf(x,p)
-        return np.log(10)*g* np.array([np.ones_like(x), (-p[2]-1) + 10**(x-p[1]), (x-p[1])])
+    def gdf_jacobian(self, x, p):
+        g = self.gdf(x, p)
+        return (
+            np.log(10)
+            * g
+            * np.array([np.ones_like(x), (-p[2] - 1) + 10 ** (x - p[1]), (x - p[1])])
+        )
 
     def gdf_hessian(self, x, p):
-        g = self.gdf(x,p)
-        jac = self.gdf_jacobian(x,p)
+        g = self.gdf(x, p)
+        jac = self.gdf_jacobian(x, p)
 
         p00 = jac[0]
         p01 = jac[1]
         p02 = jac[2]
-        p22 = jac[2] * (x-p[1])
-        p11 = jac[1]*(-p[2]-1) - np.log(10)*10**(x-p[1])*g + 10**(x-p[1])*jac[1]
-        p12 = jac[1]*x - g - p[1]*jac[1]
+        p22 = jac[2] * (x - p[1])
+        p11 = (
+            jac[1] * (-p[2] - 1)
+            - np.log(10) * 10 ** (x - p[1]) * g
+            + 10 ** (x - p[1]) * jac[1]
+        )
+        p12 = jac[1] * x - g - p[1] * jac[1]
 
-        return np.log(10) * np.array([[p00, p01, p02],
-                                      [p01, p11, p12],
-                                      [p02, p12, p22]])
+        return np.log(10) * np.array(
+            [[p00, p01, p02], [p01, p11, p12], [p02, p12, p22]]
+        )
+
 
 class MRP(Model):
     """
     An MRP model (see Murray, Robotham, Power, 2017)
     """
-    p0 = (-2., 11., -1., 1)
-    names_text = [
-        'log_10 (phi_star)',
-        'log_10 (M_star)',
-        'alpha',
-        'beta'
-    ]
 
-    names = [r'$\log_{10} \phi_\star$',
-             r'$\log_{10} M_\star$',
-             r'$\alpha$',
-             r'$\beta$']
+    p0 = (-2.0, 11.0, -1.0, 1)
+    names_text = ["log_10 (phi_star)", "log_10 (M_star)", "alpha", "beta"]
+
+    names = [r"$\log_{10} \phi_\star$", r"$\log_{10} M_\star$", r"$\alpha$", r"$\beta$"]
 
     gdf_equation = r"$\frac{dN}{dVdx} = \log(10) \beta \phi_\star \mu^{\alpha+1} \exp(-\mu^\beta)$, where $\mu = 10^{x - \log_{10} M_\star}$"
 
     def gdf(self, x, p):
         mu = 10 ** (x - p[1])
-        return np.log(10) * p[3] * 10 ** p[0] * mu ** (p[2] + 1) * np.exp(-mu**abs(p[3]))
+        return (
+            np.log(10) * p[3] * 10 ** p[0] * mu ** (p[2] + 1) * np.exp(-mu ** abs(p[3]))
+        )
+
 
 class PL(Model):
     """
     A power-law model.
     """
-    p0 = (2.,-1.)
-    names_text = ( "log_10(A)", "alpha")
-    names = (r'$\log_{10}A$', r'$\alpha$')
+
+    p0 = (2.0, -1.0)
+    names_text = ("log_10(A)", "alpha")
+    names = (r"$\log_{10}A$", r"$\alpha$")
 
     gdf_equation = r"$\frac{dN}{dVdx} = A 10^{\alpha x}$"
 
     def gdf(self, x, p):
-        return 10** p[0] * (10**(p[1]*x))
+        return 10 ** p[0] * (10 ** (p[1] * x))

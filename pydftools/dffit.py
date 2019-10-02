@@ -7,11 +7,10 @@ import attr
 import numpy as np
 from cached_property import cached_property
 from scipy.optimize import minimize
-from .utils import numerical_jac, numerical_hess, centres_to_edges, sample_ellipsoid
+from .utils import numerical_hess, centres_to_edges, sample_ellipsoid
 from .model import Model, Schechter
 from scipy.stats import poisson
 from .selection import Selection
-
 
 
 @attr.s
@@ -43,38 +42,45 @@ class Data(object):
         else:
             return None
 
-    x          = attr.ib(convert = lambda x : np.atleast_2d(x).T)
-    x_err      = attr.ib(convert = _x_err_converter, default=None,)
-    r          = attr.ib(default=None)
-
+    x = attr.ib(convert=lambda x: np.atleast_2d(x).T)
+    x_err = attr.ib(convert=_x_err_converter, default=None)
+    r = attr.ib(default=None)
 
     @x.validator
     def _x_validator(self, att, val):
 
         if len(val) < 1:
-            raise ValueError('Give at least one data point.')
+            raise ValueError("Give at least one data point.")
 
         if len(val.shape) > 2:
-            raise ValueError('x cannot have more than two dimensions.')
+            raise ValueError("x cannot have more than two dimensions.")
 
     @x_err.validator
     def _x_err_validator(self, att, val):
 
         if val is not None:
             if len(val.shape) == 2 and val.shape != self.x.shape:
-                raise ValueError('Size of x_err not compatible with size of x.')
+                raise ValueError("Size of x_err not compatible with size of x.")
             elif len(val.shape) == 3:
                 if self.n_dim == 1:
-                    raise ValueError('For one-dimensional distribution function x_err cannot have 3 dimensions.')
-                if not (val.shape[0] == self.n_data and val.shape[1] == self.n_dim and val.shape[2] == self.n_dim):
-                    raise ValueError('Size of x_err not compatible with size of x.')
+                    raise ValueError(
+                        "For one-dimensional distribution function x_err cannot have 3 dimensions."
+                    )
+                if not (
+                    val.shape[0] == self.n_data
+                    and val.shape[1] == self.n_dim
+                    and val.shape[2] == self.n_dim
+                ):
+                    raise ValueError("Size of x_err not compatible with size of x.")
 
-            elif len(val.shape) > 3 or len(val.shape)==1:
-                raise ValueError('x_err cannot have more than three dimensions, has shape: ',val.shape)
+            elif len(val.shape) > 3 or len(val.shape) == 1:
+                raise ValueError(
+                    "x_err cannot have more than three dimensions, has shape: ",
+                    val.shape,
+                )
 
             if np.min(val) <= 0:
-                raise ValueError('All values of x_err must be positive.')
-
+                raise ValueError("All values of x_err must be positive.")
 
     @staticmethod
     def _r_converter(val):
@@ -82,15 +88,17 @@ class Data(object):
             return np.array(val)
 
     @r.validator
-    def _r_validator(self,att, val):
+    def _r_validator(self, att, val):
         # Handle distance
         if val is not None:
             if len(val) != self.n_data:
-                raise ValueError('The number of r values (%s) must be equal to the number of data points (%s).'%(len(val), self.n_data))
+                raise ValueError(
+                    "The number of r values (%s) must be equal to the number of data points (%s)."
+                    % (len(val), self.n_data)
+                )
 
             if np.min(val) <= 0:
-                raise ValueError('All distance values must be positive.')
-
+                raise ValueError("All distance values must be positive.")
 
     @property
     def n_data(self):
@@ -141,7 +149,7 @@ class _Grid(object):
     gdf : array-like with ``n_points``
         Values of the best-fitting generative DF at each grid point.
     gdf_error_neg, gdf_error_pos : array-like with ``n_points``
-        The 68\%-confidence range in the Hessian approximation of the parameter covariances.
+        The 68%-confidence range in the Hessian approximation of the parameter covariances.
     gdf_quantile : (4,n_points)-array
         Quantiles of the generative DF at each grid point.
     Veff : (n_points)-array
@@ -153,22 +161,30 @@ class _Grid(object):
     effective_counts : (n_points)-array
         Fractional source counts derived from the posterior PDFs of each object
     """
-    dx = attr.ib(convert=lambda x : np.atleast_1d(np.array(x)))
-    xmin = attr.ib(convert = lambda x : np.atleast_1d(np.array(x)))
-    xmax = attr.ib(convert = lambda x : np.atleast_1d(np.array(x)))
+
+    dx = attr.ib(convert=lambda x: np.atleast_1d(np.array(x)))
+    xmin = attr.ib(convert=lambda x: np.atleast_1d(np.array(x)))
+    xmax = attr.ib(convert=lambda x: np.atleast_1d(np.array(x)))
 
     @xmax.validator
     def _xmax_validator(self, att, val):
         if np.any(val < self.xmin + self.dx):
-            raise ValueError('xmax cannot be smaller than xmin+dx.')
+            raise ValueError("xmax cannot be smaller than xmin+dx.")
 
-        if val.size != self.xmin.size or val.size != self.dx.size or self.xmin.size != self.dx.size:
+        if (
+            val.size != self.xmin.size
+            or val.size != self.dx.size
+            or self.xmin.size != self.dx.size
+        ):
             raise ValueError("xmax, xmin and dx must be of the same length")
 
     @cached_property
     def _xgrid(self):
         "Grid of x in each dimension, shape (N,D)"
-        return [np.arange(xmin, xmax, dx) for (xmin, xmax, dx) in zip(self.xmin, self.xmax, self.dx)]
+        return [
+            np.arange(xmin, xmax, dx)
+            for (xmin, xmax, dx) in zip(self.xmin, self.xmax, self.dx)
+        ]
 
     @cached_property
     def _nx(self):
@@ -207,6 +223,7 @@ class Posteriors(object):
     x_random : (N,D)-array
         Gives one random D-dimensional value drawn from the posterior PDFs of each of the N objects.
     """
+
     x_mean = attr.ib()
     x_mode = attr.ib()
     x_stdev = attr.ib()
@@ -223,9 +240,10 @@ class Fit(object):
     p_best : tuple
         A P-tuple giving the most likely model parameters according to the MML method.
     p_covariance : (P,P)-array
-        The covariance matrix of the best-fitting parameters in the Gaussian approximation from the Hessian matrix of the modified likelihood function.
-    
+        The covariance matrix of the best-fitting parameters in the Gaussian approximation from the
+        Hessian matrix of the modified likelihood function.
     """
+
     p_best = attr.ib()
     p_covariance = attr.ib()
     lnL = attr.ib()
@@ -337,14 +355,17 @@ class DFFit(object):
 
     data = attr.ib()
     selection = attr.ib()
-    grid_dx = attr.ib(default = 0.05, convert = np.atleast_1d)
-    model = attr.ib(default= Schechter())
+    grid_dx = attr.ib(default=0.05, convert=np.atleast_1d)
+    model = attr.ib(default=Schechter())
 
-    n_iterations        = attr.ib(default = 100,  convert = int)
-    keep_eddington_bias = attr.ib(default = False, convert = bool)
-    correct_lss_bias    = attr.ib(default = False, convert = bool)
-    ignore_uncertainties= attr.ib(default = False, convert=bool)
-    lss_weight = attr.ib(default=lambda x : 10**x, validator=[attr.validators.optional(lambda s, a, v: callable(v))])
+    n_iterations = attr.ib(default=100, convert=int)
+    keep_eddington_bias = attr.ib(default=False, convert=bool)
+    correct_lss_bias = attr.ib(default=False, convert=bool)
+    ignore_uncertainties = attr.ib(default=False, convert=bool)
+    lss_weight = attr.ib(
+        default=lambda x: 10 ** x,
+        validator=[attr.validators.optional(lambda s, a, v: callable(v))],
+    )
 
     def __attrs_post_init__(self):
         if self.data.x_err is None:
@@ -353,8 +374,7 @@ class DFFit(object):
     @n_iterations.validator
     def _n_iterations_validator(self, att, val):
         if val < 1:
-            raise ValueError('n_iterations must be a positive integer.')
-
+            raise ValueError("n_iterations must be a positive integer.")
 
     @data.validator
     def _data_validator(self, att, val):
@@ -364,59 +384,79 @@ class DFFit(object):
         if val.x_err is not None:
             if len(val.x_err) == 2:
                 if np.any(np.min(val.x - val.x_err, axis=1) < self.grid.xmin):
-                    raise ValueError('xmin cannot be larger than smallest observed value x - x_err')
+                    raise ValueError(
+                        "xmin cannot be larger than smallest observed value x - x_err"
+                    )
                 if np.any(np.max(val.x + val.x_err, axis=1) > self.grid.xmax):
-                    raise ValueError('xmax cannot be smaller than largest observed value x + x_err')
+                    raise ValueError(
+                        "xmax cannot be smaller than largest observed value x + x_err"
+                    )
             elif len(val.x_err) == 3:
                 xerr = np.einsum("ijj -> ij", val.x_err)
 
                 if np.any(np.min(val.x - xerr, axis=1) < self.grid.xmin):
-                    raise ValueError('xmin cannot be larger than smallest observed value x - x_err')
+                    raise ValueError(
+                        "xmin cannot be larger than smallest observed value x - x_err"
+                    )
                 if np.any(np.max(val.x + xerr, axis=1) > self.grid.xmax):
-                    raise ValueError('xmax cannot be smaller than largest observed value x + x_err')
+                    raise ValueError(
+                        "xmax cannot be smaller than largest observed value x + x_err"
+                    )
 
     @grid_dx.validator
     def _grid_dx_validator(self, att, val):
         if np.any(val < 0):
             raise ValueError("grid_dx must be greater than 0")
         if val.size != self.data.n_dim:
-            raise ValueError('dx must be a D-element vector, where D is the number of columns of x.')
+            raise ValueError(
+                "dx must be a D-element vector, where D is the number of columns of x."
+            )
 
     @model.validator
     def _model_validator(self, att, val):
         if not isinstance(val, Model):
             raise ValueError("model must be a Grid instance")
 
-
     @selection.validator
     def _selection_validator(self, att, val):
         if not isinstance(val, Selection):
-            raise ValueError("The selection function must be a subclass of the Selection class.")
+            raise ValueError(
+                "The selection function must be a subclass of the Selection class."
+            )
 
     @cached_property
     def grid(self):
         "Contains the gridded evaluations of various functions used for integration throughout."
-        return _Grid(dx = self.grid_dx, xmin = self.selection.xmin, xmax = self.selection.xmax)
+        return _Grid(
+            dx=self.grid_dx, xmin=self.selection.xmin, xmax=self.selection.xmax
+        )
 
     @cached_property
     def rho_observed(self):
         "An (Ndata, Ngrid) array, giving the a priori probability that each observation i in Ndata has value x (from grid)."
-        d = np.array([np.add.outer(-xgrid, xval) for xval, xgrid in
-                      zip(self.data.x.T, self.grid.x)]).T  # has shape (N, Ngrid, Ndim)
-        rho_observed = np.exp(-np.einsum("ijk, ikl, ijl -> ij", d, self.data.invC, d) / 2)
+        d = np.array(
+            [
+                np.add.outer(-xgrid, xval)
+                for xval, xgrid in zip(self.data.x.T, self.grid.x)
+            ]
+        ).T  # has shape (N, Ngrid, Ndim)
+        rho_observed = np.exp(
+            -np.einsum("ijk, ikl, ijl -> ij", d, self.data.invC, d) / 2
+        )
         # TODO: is it correct to leave off the normalisation?
 
         # if the xrange is very far from xobs, set probability=1 at closest point
         bad_indx = np.sum(rho_observed, axis=1) < 0.01
         if np.any(bad_indx):
             indices = np.argmin(np.sum(d[bad_indx] ** 2, axis=2), axis=1)
-            rho_observed[bad_indx][indices] = 1.
+            rho_observed[bad_indx][indices] = 1.0
         return rho_observed
 
     def rho_corrected(self, p):
         """
-        Calculate the probability that each observation has value x, taking the distribution at point p into account
-        
+        Calculate the probability that each observation has value x, taking the distribution at
+        point p into account
+
         Parameters
         ----------
         p : tuple
@@ -425,7 +465,8 @@ class DFFit(object):
         Returns
         -------
         rho_corrected : array
-            An (Ndata, Ngrid) array giving the probability for each observation at each grid point x.
+            An (Ndata, Ngrid) array giving the probability for each observation at
+            each grid point x.
         """
         if self.keep_eddington_bias:
             prior = np.ones(self.grid.n_points)
@@ -456,7 +497,9 @@ class DFFit(object):
         """
         if self.ignore_uncertainties:
             # Assign each obs to its nearest grid point
-            rho_unbiased = np.histogramdd(self.data.x, bins=[centres_to_edges(x) for x in self.grid.x])[0]
+            rho_unbiased = np.histogramdd(
+                self.data.x, bins=[centres_to_edges(x) for x in self.grid.x]
+            )[0]
             rho_unbiased /= self.grid.dvolume
         else:
             rho_corrected = self.rho_corrected(p)
@@ -490,14 +533,20 @@ class DFFit(object):
     #     second_term = np.sum(numerator/denom, axis=1)
     #     return first_term + second_term
 
-    def hessian(self,p):
+    def hessian(self, p):
         "Determines the Hessian of the MML likelihood, for p0 = p."
         if not self.correct_lss_bias:
             self.grid.veff = self.selection.Veff(*self.grid.x)
         elif self.correct_lss_bias and self.selection.g is None:
-            self.selection._get_veff_lss(self.data.r, self.grid, p, self.model,
-                                         weight=self.lss_weight if self.lss_weight is not None else lambda
-                                             x: np.ones_like(x))
+            self.selection._get_veff_lss(
+                self.data.r,
+                self.grid,
+                p,
+                self.model,
+                weight=self.lss_weight
+                if self.lss_weight is not None
+                else lambda x: np.ones_like(x),
+            )
             self.grid.veff = self.selection.Veff(*self.grid.x)
 
         # make unbiased source density function
@@ -512,8 +561,13 @@ class DFFit(object):
 
             # end safety operations
             # print(p, phi)
-            lnl = np.sum(
-                phi[mask] * self.grid.veff[mask] - np.log(phi[mask]) * rho_unbiased[mask]) * self.grid.dvolume
+            lnl = (
+                np.sum(
+                    phi[mask] * self.grid.veff[mask]
+                    - np.log(phi[mask]) * rho_unbiased[mask]
+                )
+                * self.grid.dvolume
+            )
             return lnl
 
         return -numerical_hess(neglogL, p)
@@ -525,7 +579,8 @@ class DFFit(object):
     @cached_property
     def fit(self):
         """
-        A :class:`~Fit` object, containing the fitted parameters from a Modified Maximum Likelihood fit to the data.
+        A :class:`~Fit` object, containing the fitted parameters from a Modified Maximum
+        Likelihood fit to the data.
 
         This is evaluated lazily.
         """
@@ -546,8 +601,15 @@ class DFFit(object):
 
             # determine Veff LSS
             if self.correct_lss_bias and self.selection.g is None:
-                self.selection._get_veff_lss(self.data.r, self.grid, p0, self.model,
-                                             weight = self.lss_weight if self.lss_weight is not None else lambda x : np.ones_like(x))
+                self.selection._get_veff_lss(
+                    self.data.r,
+                    self.grid,
+                    p0,
+                    self.model,
+                    weight=self.lss_weight
+                    if self.lss_weight is not None
+                    else lambda x: np.ones_like(x),
+                )
 
                 self.grid.veff = self.selection.Veff(*self.grid.x)
 
@@ -559,57 +621,71 @@ class DFFit(object):
                 phi = self.model.gdf(*self.grid.x, p=p)
                 # safety operations (adding about 50% computation time)
                 phi[np.isinf(phi)] = 0
-                mask = phi >0
+                mask = phi > 0
 
                 # end safety operations
-                lnl = np.sum(phi[mask] * self.grid.veff[mask] - np.log(phi[mask]) * rho_unbiased[mask]) * self.grid.dvolume - offset
+                lnl = (
+                    np.sum(
+                        phi[mask] * self.grid.veff[mask]
+                        - np.log(phi[mask]) * rho_unbiased[mask]
+                    )
+                    * self.grid.dvolume
+                    - offset
+                )
                 return lnl
-
 
             # test
             if np.all(np.isinf(self.model.gdf(*self.grid.x, p=p0))):
-                raise RuntimeError('cannot evaluate GDF at initial parameters provided')
+                raise RuntimeError("cannot evaluate GDF at initial parameters provided")
             try:
                 test = neglogL(p0)
                 if np.isinf(test):
-                    raise RuntimeError('cannot evaluate likelihood at initial parameters provided')
+                    raise RuntimeError(
+                        "cannot evaluate likelihood at initial parameters provided"
+                    )
             except Exception as e:
                 raise e
 
             # maximize ln(L) (NOTE: this is set up to match the R version)
-            opt_options = {"maxiter":100000}
+            opt_options = {"maxiter": 100000}
             if self.ignore_uncertainties:
-                # Coarse binning when x_err is None requires different solver that doesn't use jacobian.
+                # Coarse binning when x_err is None requires different solver that
+                # doesn't use jacobian.
                 method = "Nelder-Mead"
             else:
                 method = "BFGS"
 
-            opt = minimize(neglogL, p0, method = method, options=opt_options)
+            opt = minimize(neglogL, p0, method=method, options=opt_options)
             offset += opt.fun
             chain[k] = np.concatenate((opt.x, [opt.fun]))
 
             # assess convergence
-            if ( self.ignore_uncertainties and not self.correct_lss_bias) or self.keep_eddington_bias:
+            if (
+                self.ignore_uncertainties and not self.correct_lss_bias
+            ) or self.keep_eddington_bias:
                 converged = opt.success
                 running = False
             else:
+                value_old = 1.0 * opt.fun
+
                 # asses convergence
                 if k == 0:
                     converged = False
                     d_old = np.inf
                 else:
-                    d = np.abs(opt.fun-value_old)
+                    d = np.abs(opt.fun - value_old)
                     converged = d >= d_old
-                    d_old = d *1
-
-                value_old = 1.*opt.fun
+                    d_old = d * 1
 
                 if converged:
                     running = False
-                elif k == self.n_iterations-1:
+                elif k == self.n_iterations - 1:
                     converged = False
                     running = False
-                    print('WARNING: Maximum number of iteration reached. Consider increasing n.iterations and/or providing better initial parameters.')
+                    print(
+                        "WARNING: Maximum number of iteration reached. Consider increasing "
+                        "n.iterations and/or providing better initial parameters."
+                    )
 
                 # prepare initial values for next iteration
                 p0 = opt.x
@@ -620,27 +696,40 @@ class DFFit(object):
         if np.linalg.det(cov) > 1e12:
             converged = False
             cov = None
-            print('WARNING: Fit ill-conditioned. Consider providing better initial parameters or selection arguments.')
+            print(
+                "WARNING: Fit ill-conditioned. Consider providing better initial parameters or selection arguments."
+            )
 
             ln_evidence = False
         else:
             n_para = len(opt.x)
-            ln_evidence = -offset + 0.5 * n_para * np.log(2 * np.pi) + 0.5 * np.log(np.linalg.det(cov))
+            ln_evidence = (
+                -offset
+                + 0.5 * n_para * np.log(2 * np.pi)
+                + 0.5 * np.log(np.linalg.det(cov))
+            )
 
         if self.correct_lss_bias:
-            self.selection._get_veff_lss(self.data.r, self.grid, opt.x, self.model,
-                                         weight=self.lss_weight if self.lss_weight is not None else lambda
-                                             x: np.ones_like(x))
+            self.selection._get_veff_lss(
+                self.data.r,
+                self.grid,
+                opt.x,
+                self.model,
+                weight=self.lss_weight
+                if self.lss_weight is not None
+                else lambda x: np.ones_like(x),
+            )
 
-        fit = Fit(p_best = opt.x, p_covariance = cov, lnL = lambda p : -neglogL(p),
-                  opt = opt,
-                  status = dict(n_iterations = k,
-                                 converged = converged,
-                                 chain = chain[:k]),
-                   ln_evidence = ln_evidence,
-                   gdf_ = self.model.gdf,
-                   veff_ = self.selection.Veff
-                   )
+        fit = Fit(
+            p_best=opt.x,
+            p_covariance=cov,
+            lnL=lambda p: -neglogL(p),
+            opt=opt,
+            status=dict(n_iterations=k, converged=converged, chain=chain[:k]),
+            ln_evidence=ln_evidence,
+            gdf_=self.model.gdf,
+            veff_=self.selection.Veff,
+        )
 
         # UPDATE GRID
         self.grid.gdf = self.model.gdf(*self.grid.x, p=opt.x)
@@ -650,56 +739,39 @@ class DFFit(object):
         # finalize output
         return fit
 
-
     @cached_property
     def _gaussian_errors(self):
         cov = self.fit.p_covariance
-        eigvals, eigvectors = np.linalg.eig(cov)
-        npar = self.model.n_param
-        nx = self.grid.n_points
 
         # sample surface of covariance ellipsoid
         nsteps = 500
-        p_new = sample_ellipsoid(cov, nsteps, add_boundaries=True, mean =self.fit.p_best)
+        p_new = sample_ellipsoid(cov, nsteps, add_boundaries=True, mean=self.fit.p_best)
         y_new = np.zeros((self.grid.n_points, len(p_new)))
-        for i,p in enumerate(p_new):
-            y_new[:,i] = self.model.gdf(*self.grid.x, p=p)
+        for i, p in enumerate(p_new):
+            y_new[:, i] = self.model.gdf(*self.grid.x, p=p)
 
-        # y_new = np.empty((nx, nsteps + 2 * npar))
-        # for i in range(nsteps + 2 * npar):
-        #     if i <= nsteps-1:
-        #         e = np.random.normal(size=npar)
-        #         e /= np.sqrt(np.sum(e ** 2))
-        #     else:
-        #         e = np.zeros(npar)
-        #         if i >= nsteps+npar:
-        #             e[i+1-nsteps-np] = 1
-        #         else:
-        #             e[i+1-nsteps] = -1
-        #
-        #
-        #     v = np.matmul(eigvectors, np.sqrt(eigvals) * e)
-        #     p_new = self.fit.p_best+v
-        #     y_new[:, i] = self.model.gdf(self.grid.x, p_new)
-
-        self.grid.gdf_gaussian_min = np.nanmin(y_new, axis=1) #np.nanmin([y_new, np.inf])
-        self.grid.gdf_gaussian_max = np.nanmax(y_new, axis=1) #- self.grid.gdf
+        self.grid.gdf_gaussian_min = np.nanmin(y_new, axis=1)
+        self.grid.gdf_gaussian_max = np.nanmax(y_new, axis=1)
 
         return self.grid.gdf_gaussian_min, self.grid.gdf_gaussian_max
 
     @cached_property
     def gdf_gaussian_min(self):
-        "The minimum value of the generative distribution function at each gridded x, for any combination of parameters within 1-sigma of the best fit."
+        """The minimum value of the generative distribution function at each gridded x,
+        for any combination of parameters within 1-sigma of the best fit."""
         return self._gaussian_errors[0]
 
     @cached_property
     def gdf_gaussian_max(self):
-        "The maximum value of the generative distribution function at each gridded x, for any combination of parameters within 1-sigma of the best fit."
+        """The maximum value of the generative distribution function at each gridded x,
+        for any combination of parameters within 1-sigma of the best fit."""
         return self._gaussian_errors[1]
 
-    def _refit_to_new_sample(self,n, do_jackknife=False, lss_errors=True):
-        if not self.fit.status['converged']:
-            print("The fit did not converge, and therefore resampling cannot be performed.")
+    def _refit_to_new_sample(self, n, do_jackknife=False, lss_errors=True):
+        if not self.fit.status["converged"]:
+            print(
+                "The fit did not converge, and therefore resampling cannot be performed."
+            )
 
         # input handling
         n_data = self.data.n_data
@@ -709,7 +781,7 @@ class DFFit(object):
             n = min(n, n_data)
 
         if n_data < 3:
-            raise ValueError('Resampling/Jackknifing requires at least three objects.')
+            raise ValueError("Resampling/Jackknifing requires at least three objects.")
 
         if n < 2:
             raise ValueError("Resampling/Jackknifing requires at least 2 iterations")
@@ -721,15 +793,15 @@ class DFFit(object):
         p_new = np.empty((n, npar))
 
         if do_jackknife:
-            reject = np.random.choice(n_data, size= n, replace=False)
+            reject = np.random.choice(n_data, size=n, replace=False)
 
         for iteration in range(n):
 
-            #print('Resampling: %4.2f'%(float(iteration) / n))
+            # print('Resampling: %4.2f'%(float(iteration) / n))
 
             if not do_jackknife:
                 n_data = max(2, np.random.poisson(self.data.n_data))
-                s = np.random.randint(0,self.data.n_data-1, size=n_data)
+                s = np.random.randint(0, self.data.n_data - 1, size=n_data)
             else:
                 s = np.arange(n_data) != reject[iteration]
 
@@ -745,14 +817,16 @@ class DFFit(object):
             else:
                 r = None
 
-            b = DFFit(data = Data(x=x.flatten(), x_err=np.squeeze(x_err), r=r),
-                      selection = self.selection,
-                      grid_dx = self.grid_dx,
-                      model = self.model,
-                      n_iterations = self.n_iterations,
-                      keep_eddington_bias = self.keep_eddington_bias,
-                      correct_lss_bias    = self.correct_lss_bias and lss_errors,
-                      lss_weight = self.lss_weight)
+            b = DFFit(
+                data=Data(x=x.flatten(), x_err=np.squeeze(x_err), r=r),
+                selection=self.selection,
+                grid_dx=self.grid_dx,
+                model=self.model,
+                n_iterations=self.n_iterations,
+                keep_eddington_bias=self.keep_eddington_bias,
+                correct_lss_bias=self.correct_lss_bias and lss_errors,
+                lss_weight=self.lss_weight,
+            )
 
             b.model.p0 = self.fit.p_best
 
@@ -788,7 +862,7 @@ class DFFit(object):
         self.fit.p_covariance_resample = np.cov(p_new.T)
 
         # make parameter quantiles
-        q = [2., 16, 84., 98.]
+        q = [2.0, 16, 84.0, 98.0]
         self.fit.p_quantile = np.percentile(p_new, q, axis=0)
 
         # make DF quantiles
@@ -798,7 +872,10 @@ class DFFit(object):
 
         y_quant = np.empty((4, self.grid.n_points))
         for i in range(self.grid.n_points):
-            lst = np.logical_and(np.logical_not(np.logical_and(np.isnan(s[:,i]), np.isfinite(s[:,i]))), s[:,i]>0)
+            lst = np.logical_and(
+                np.logical_not(np.logical_and(np.isnan(s[:, i]), np.isfinite(s[:, i]))),
+                s[:, i] > 0,
+            )
             y_quant[:, i] = np.percentile(s[lst, i], q)
 
         self.grid.gdf_quantile = y_quant
@@ -828,29 +905,33 @@ class DFFit(object):
         This routine does not return anything, but rather adds properties to the object. Importantly, it adds
         :attr:`~.fit.p_covariance_jackknife`.
         """
-        p_new = self._refit_to_new_sample(n_jackknife, do_jackknife = True, lss_errors=lss_errors)
+        p_new = self._refit_to_new_sample(
+            n_jackknife, do_jackknife=True, lss_errors=lss_errors
+        )
 
         # estimate covariance
         n_data = self.data.n_data
         npar = self.model.n_param
-        ok = np.sum(p_new,axis=1) != np.nan
+        ok = np.sum(p_new, axis=1) != np.nan
         cov_jn = np.cov(p_new[ok]) * (n_data - 1)
 
         # compute poisson covariance
-        jn = DFFit(data=self.data,
-                  selection=self.selection,
-                  grid_dx=self.grid_dx,
-                  model=self.model,
-                  n_iterations=self.n_iterations,
-                  keep_eddington_bias=self.keep_eddington_bias,
-                  correct_lss_bias=self.correct_lss_bias and lss_errors,
-                  lss_weight=self.lss_weight)
+        jn = DFFit(
+            data=self.data,
+            selection=self.selection,
+            grid_dx=self.grid_dx,
+            model=self.model,
+            n_iterations=self.n_iterations,
+            keep_eddington_bias=self.keep_eddington_bias,
+            correct_lss_bias=self.correct_lss_bias and lss_errors,
+            lss_weight=self.lss_weight,
+        )
 
         jn.model.p0 = self.fit.p_best
         jn.options.n_iterations = 1
 
-        q = [.16, 0.5, 0.84]
-        p_pois = np.empty((3,npar))
+        q = [0.16, 0.5, 0.84]
+        p_pois = np.empty((3, npar))
         for i in range(3):
             n_new = poisson.ppf(q[i], n_data)
             jn.grid.veff = self.grid.veff * n_new / n_data
@@ -859,20 +940,24 @@ class DFFit(object):
         cov_pois = np.cov(p_pois)
 
         # estimate combined covariance
-        if np.isnan(cov_pois[0,0]):
+        if np.isnan(cov_pois[0, 0]):
             self.fit.p_covariance_jackknife = cov_jn
         else:
-            self.fit.p_covariance_jackknife = cov_jn+cov_pois
-        
+            self.fit.p_covariance_jackknife = cov_jn + cov_pois
 
         # correct estimator bias
         p_reduced = np.nanmean(p_new, axis=1)
-        self.fit.p_best_mle_bias_corrected = n_data * self.fit.p_best - (n_data - 1) * p_reduced
-        self.fit.gdf_mle_bias_corrected = lambda x : self.model.gdf(x, self.fit.p_best_mle_bias_corrected)
-        self.fit.scd_mle_bias_corrected = lambda x : self.fit.gdf_mle_bias_corrected(x) * self.selection.Veff(x)
+        self.fit.p_best_mle_bias_corrected = (
+            n_data * self.fit.p_best - (n_data - 1) * p_reduced
+        )
+        self.fit.gdf_mle_bias_corrected = lambda x: self.model.gdf(
+            x, self.fit.p_best_mle_bias_corrected
+        )
+        self.fit.scd_mle_bias_corrected = lambda x: self.fit.gdf_mle_bias_corrected(
+            x
+        ) * self.selection.Veff(x)
         self.grid.gdf_mle_bias_corrected = self.fit.gdf_mle_bias_corrected(self.grid.x)
         self.grid.scd_mle_bias_corrected = self.fit.scd_mle_bias_corrected(self.grid.x)
-
 
     @cached_property
     def posterior(self):
@@ -900,25 +985,35 @@ class DFFit(object):
 
         # make posterior PDF for data point i
         rho_corrected = self.rho_corrected(self.fit.p_best)
-        s = np.sum(rho_corrected, axis=1) #shape ndata
+        s = np.sum(rho_corrected, axis=1)  # shape ndata
         rho_unbiased = self.rho_unbiased(self.fit.p_best)
         rho_unbiased_sqr = np.sum((rho_corrected.T / (s * x_mesh_dv)) ** 2, axis=1)
 
         # mean, standard deviation and mode
         for j in range(n_dim):
             m0[:, j] = np.sum(x_mesh[j] * rho_corrected, axis=1) / s
-            m1[:, j] = np.sqrt(np.sum(np.add.outer(-m0[:, j], x_mesh[j]) ** 2 * rho_corrected, axis=1) / s)
+            m1[:, j] = np.sqrt(
+                np.sum(np.add.outer(-m0[:, j], x_mesh[j]) ** 2 * rho_corrected, axis=1)
+                / s
+            )
 
         a = np.argmax(rho_corrected, axis=1)
         md = np.array([xj[a] for xj in x_mesh]).T
 
-        posterior = Posteriors(x_mean = m0, x_stdev = m1, x_mode = md, x_random = m0 + m1 * np.random.normal(size = (n_data,n_dim)))
+        posterior = Posteriors(
+            x_mean=m0,
+            x_stdev=m1,
+            x_mode=md,
+            x_random=m0 + m1 * np.random.normal(size=(n_data, n_dim)),
+        )
         self.grid.scd_posterior = rho_unbiased
-        self.grid.effective_counts = rho_unbiased ** 2 / rho_unbiased_sqr  # this equation gives the effective number of sources per bin
+        self.grid.effective_counts = (
+            rho_unbiased ** 2 / rho_unbiased_sqr
+        )  # this equation gives the effective number of sources per bin
         self.grid.effective_counts[np.isinf(self.grid.effective_counts)] = 0
 
         return posterior
-    
+
     def fit_summary(self, format_for_notebook=False):
         """
         Return a string summary of the fit.
@@ -940,28 +1035,42 @@ class DFFit(object):
         br = "<br>" if format_for_notebook else "\n"
         if self.model.gdf_equation is not None:
 
-            string += '%s%s'% (self.model.gdf_equation,br*2)
+            string += "%s%s" % (self.model.gdf_equation, br * 2)
 
+        #        if format_for_notebook:
+        #            string += "\n```\n"
 
-#        if format_for_notebook:
-#            string += "\n```\n"
-
-        if not self.fit.status['converged']:
+        if not self.fit.status["converged"]:
             for i in range(len(p)):
-                string += '%s = %7.2f (not converged)%s'%(self.model.names[i], p[i],br)
+                string += "%s = %7.2f (not converged)%s" % (
+                    self.model.names[i],
+                    p[i],
+                    br,
+                )
         else:
             if hasattr(self.fit, "p_quantile"):
-                sigma_84 = self.fit.p_quantile[2]-self.fit.p_best
-                sigma_16 = self.fit.p_best-self.fit.p_quantile[1]
+                sigma_84 = self.fit.p_quantile[2] - self.fit.p_best
+                sigma_16 = self.fit.p_best - self.fit.p_quantile[1]
                 for i in range(len(p)):
-                    string += '%s = %8.3f (+%4.3f -%4.3f)%s'%(self.model.names[i], p[i], sigma_84[i], sigma_16[i],br)
+                    string += "%s = %8.3f (+%4.3f -%4.3f)%s" % (
+                        self.model.names[i],
+                        p[i],
+                        sigma_84[i],
+                        sigma_16[i],
+                        br,
+                    )
 
             else:
                 sigma = self.fit.p_sigma
                 for i in range(len(p)):
-                    string += '%s = %8.3f (+-%4.3f)%s'%(self.model.names[i], p[i], sigma[i],br)
+                    string += "%s = %8.3f (+-%4.3f)%s" % (
+                        self.model.names[i],
+                        p[i],
+                        sigma[i],
+                        br,
+                    )
 
-#        if format_for_notebook:
-#            string += "\n```"
+        #        if format_for_notebook:
+        #            string += "\n```"
 
         return string
