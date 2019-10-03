@@ -20,7 +20,8 @@ requirements = [
     "Click>=6.0",
     "attrs>=17.0",
     "cached_property",
-    "chainconsumer"
+    "chainconsumer",
+    "matplotlib"
     # TODO: put package requirements here
 ]
 
