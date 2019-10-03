@@ -42,8 +42,8 @@ class Data(object):
         else:
             return None
 
-    x = attr.ib(convert=lambda x: np.atleast_2d(x).T)
-    x_err = attr.ib(convert=_x_err_converter, default=None)
+    x = attr.ib(converter=lambda x: np.atleast_2d(x).T)
+    x_err = attr.ib(converter=_x_err_converter, default=None)
     r = attr.ib(default=None)
 
     @x.validator
@@ -162,9 +162,9 @@ class _Grid(object):
         Fractional source counts derived from the posterior PDFs of each object
     """
 
-    dx = attr.ib(convert=lambda x: np.atleast_1d(np.array(x)))
-    xmin = attr.ib(convert=lambda x: np.atleast_1d(np.array(x)))
-    xmax = attr.ib(convert=lambda x: np.atleast_1d(np.array(x)))
+    dx = attr.ib(converter=lambda x: np.atleast_1d(np.array(x)))
+    xmin = attr.ib(converter=lambda x: np.atleast_1d(np.array(x)))
+    xmax = attr.ib(converter=lambda x: np.atleast_1d(np.array(x)))
 
     @xmax.validator
     def _xmax_validator(self, att, val):
@@ -355,13 +355,13 @@ class DFFit(object):
 
     data = attr.ib()
     selection = attr.ib()
-    grid_dx = attr.ib(default=0.05, convert=np.atleast_1d)
+    grid_dx = attr.ib(default=0.05, converter=np.atleast_1d)
     model = attr.ib(default=Schechter())
 
-    n_iterations = attr.ib(default=100, convert=int)
-    keep_eddington_bias = attr.ib(default=False, convert=bool)
-    correct_lss_bias = attr.ib(default=False, convert=bool)
-    ignore_uncertainties = attr.ib(default=False, convert=bool)
+    n_iterations = attr.ib(default=100, converter=int)
+    keep_eddington_bias = attr.ib(default=False, converter=bool)
+    correct_lss_bias = attr.ib(default=False, converter=bool)
+    ignore_uncertainties = attr.ib(default=False, converter=bool)
     lss_weight = attr.ib(
         default=lambda x: 10 ** x,
         validator=[attr.validators.optional(lambda s, a, v: callable(v))],
