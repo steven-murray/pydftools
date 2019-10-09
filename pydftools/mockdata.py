@@ -11,8 +11,16 @@ from .dffit import Data
 from .selection import SelectionRdep
 
 
-def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
-             p=None,  sigma = 0, shot_noise = False, verbose = False):
+def mockdata(
+    n=None,
+    seed=None,
+    model=Schechter(),
+    selection=None,
+    p=None,
+    sigma=0,
+    shot_noise=False,
+    verbose=False,
+):
     """
     Generate 1D mock data.
 
@@ -115,34 +123,39 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
         raise e
 
     if np.isinf(test):
-        raise ValueError('model cannot be evaluated for parameter-vector p.')
+        raise ValueError("model cannot be evaluated for parameter-vector p.")
 
     if seed:
         np.random.seed(seed)
 
     # Generate source count function (including LSS if present)
-    scd = lambda x : selection.Veff(x) * model.gdf(x, p)
-
+    def scd(x):
+        return selection.Veff(x) * model.gdf(x, p)
 
     # compute expected number of galaxies (accounting for lss if present)
     n_expected = quad(scd, selection.xmin, selection.xmax)[0]
-    n_expected_large = quad(scd, 2 * selection.xmin - selection.xmax, 2 * selection.xmax - selection.xmin)[0]
+    n_expected_large = quad(
+        scd, 2 * selection.xmin - selection.xmax, 2 * selection.xmax - selection.xmin
+    )[0]
     if n_expected_large > 1.001 * n_expected:
-        raise ValueError('A non-negligible number of galaxies lies outside the range xmin-xmax. Please change this range.')
+        raise ValueError(
+            "A non-negligible number of galaxies lies outside the range xmin-xmax. Please change this range."
+        )
 
     # rescale effective volume to match the (optional) requested number of galaxies
     if n is None:
         if n_expected < 2:
-            raise ValueError('Input arguments imply less than two sources in the survey.')
+            raise ValueError(
+                "Input arguments imply less than two sources in the survey."
+            )
         rescaling_factor = 1
     else:
         if n < 2:
-            raise ValueError('Number of sources must be at least 2.')
+            raise ValueError("Number of sources must be at least 2.")
 
         rescaling_factor = n / n_expected
         selection.vol_renorm *= rescaling_factor
         n_expected = n
-
 
     # make actual number of sources
     if shot_noise:
@@ -151,32 +164,40 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
         n = int(round(n_expected))
 
     if verbose:
-        print('Number of sources in the mock survey (expected): %.3f'% n_expected)
-        print('Number of sources in the mock survey (selected): %d'% n)
+        print("Number of sources in the mock survey (expected): %.3f" % n_expected)
+        print("Number of sources in the mock survey (selected): %d" % n)
 
     # sample masses (x)
-    dx = min(0.005, (selection.xmax-selection.xmin) / 1000.)
+    dx = min(0.005, (selection.xmax - selection.xmin) / 1000.0)
     xgrid = np.arange(selection.xmin, selection.xmax, dx)
-    cdf = np.cumsum(scd(xgrid))  # cumulative distribution function of source count density
+    cdf = np.cumsum(
+        scd(xgrid)
+    )  # cumulative distribution function of source count density
 
-    if cdf[-2]==cdf[-1]:
-        indxu = np.where(cdf == cdf[-1])[0][0] # only interpolate up to where cdf stops rising, otherwise errors occur
+    if cdf[-2] == cdf[-1]:
+        indxu = np.where(cdf == cdf[-1])[0][
+            0
+        ]  # only interpolate up to where cdf stops rising, otherwise errors occur
     else:
-        indxu = len(cdf)-1
+        indxu = len(cdf) - 1
 
-    if cdf[1]==cdf[0]:
-        indxl = np.where(cdf == cdf[0])[0][-1] # only interpolate up to where cdf stops rising, otherwise errors occur
+    if cdf[1] == cdf[0]:
+        indxl = np.where(cdf == cdf[0])[0][
+            -1
+        ]  # only interpolate up to where cdf stops rising, otherwise errors occur
     else:
         indxl = 0
 
-    qnf = spline(cdf[indxl:indxu], xgrid[indxl:indxu])  # quantile function of source count density
+    qnf = spline(
+        cdf[indxl:indxu], xgrid[indxl:indxu]
+    )  # quantile function of source count density
     x = qnf(np.random.uniform(cdf[0], cdf[-1], size=n))
 
     # add mass observing errors (x.err)
     if sigma is not None:
-        if hasattr(sigma,"__len__"):
+        if hasattr(sigma, "__len__"):
             if len(sigma) < n:
-                raise ValueError('If sigma is a vector its too short.')
+                raise ValueError("If sigma is a vector its too short.")
             else:
                 x_err = sigma[:n]
         else:
@@ -187,44 +208,22 @@ def mockdata(n=None, seed=None,  model = Schechter(), selection = None,
         x_obs = x
         x_err = None
 
-    # make effective volumes for each observation, that an observer would assign, not knowning the observational error in x
-    # veff_values = selection.Veff(x_obs)
-
     if hasattr(selection, "mock_r"):
         r = selection.mock_r(x, verbose=verbose)
     else:
         r = None
 
-    # # If LSS is supplied, we need to remove that for the output selection function, becau
-    # if isinstance(selection, SelectionRdep) and selection.g is not None:
-    #     selection = SelectionRdep(xmin = selection.xmin, xmax = selection.xmax,
-    #                               rmin = selection.rmin, rmax = selection.rmax,
-    #                               f = selection.f, dvdr = selection.dvdr,
-    #                               vol_renorm = selection.vol_renorm)
-
     return (
-        Data(
-            x = x_obs,
-            x_err = x_err,
-            r = r
-        ),
+        Data(x=x_obs, x_err=x_err, r=r),
         selection,
         model,
-        # Grid(
-        #     xmin = xmin,
-        #     xmax = xmax,
-        #     dx = dx
-        # ),
         dict(
-            x_true = x,
-            dx = dx,
-            scd = scd,
-            p = p,
-            rescaling_factor = rescaling_factor,
-            n = n,
-            n_expected = n_expected
-        )
+            x_true=x,
+            dx=dx,
+            scd=scd,
+            p=p,
+            rescaling_factor=rescaling_factor,
+            n=n,
+            n_expected=n_expected,
+        ),
     )
-
-
-
