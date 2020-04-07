@@ -3,8 +3,6 @@
 
 """Tests for `mockdata` module."""
 
-import pytest
-
 from pydftools import mockdata
 
 
