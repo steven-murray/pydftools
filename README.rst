@@ -39,6 +39,12 @@ In short, clean out Eddington bias from your fits:
 * Free software: MIT license
 * Documentation: https://pydftools.readthedocs.io.
 
+Acknowledging
+-------------
+If you use this software, please consider starring the repository. The methods and
+algorithms used by the software were developed in the paper
+`"Eddington's Demon: Inferring Galaxy Mass Functions and other Distributions from Uncertain Data" <https://ui.adsabs.harvard.edu/abs/2018MNRAS.474.5500O>`_,
+so please consult it and cite it if you use ``pydftools``!
 
 Features
 --------
