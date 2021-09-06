@@ -165,7 +165,11 @@ class MRP(Model):
     def gdf(self, x, p):
         mu = 10 ** (x - p[1])
         return (
-            np.log(10) * p[3] * 10 ** p[0] * mu ** (p[2] + 1) * np.exp(-mu ** abs(p[3]))
+            np.log(10)
+            * p[3]
+            * 10 ** p[0]
+            * mu ** (p[2] + 1)
+            * np.exp(-(mu ** abs(p[3])))
         )
 
 
