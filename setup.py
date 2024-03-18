@@ -21,7 +21,7 @@ requirements = [
     "attrs>=17.0",
     "cached_property",
     "chainconsumer",
-    "matplotlib"
+    "matplotlib",
     # TODO: put package requirements here
 ]
 
