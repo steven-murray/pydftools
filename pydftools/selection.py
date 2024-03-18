@@ -28,6 +28,7 @@ Using the three subclasses defined in this module, there are 5 ways of defining 
    ``Veff(x)=0`` will be assumed.
 
 """
+
 import attr
 import scipy.special as sp
 import numpy as np
@@ -269,10 +270,10 @@ class SelectionRdep(Selection):
     """
 
     f = attr.ib(
-        default=lambda x, r: sp.erf((1 - 1e3 * r / np.sqrt(10 ** x)) * 20) * 0.5 + 0.5,
+        default=lambda x, r: sp.erf((1 - 1e3 * r / np.sqrt(10**x)) * 20) * 0.5 + 0.5,
         validator=_callable_validator,
     )
-    dvdr = attr.ib(default=lambda r: 2.13966 * r ** 2, validator=_callable_validator)
+    dvdr = attr.ib(default=lambda r: 2.13966 * r**2, validator=_callable_validator)
     g = attr.ib(default=None, validator=attr.validators.optional(_callable_validator))
     rmin = attr.ib(default=0, converter=np.float)
     rmax = attr.ib(default=20, converter=np.float)
@@ -419,6 +420,7 @@ class SelectionRdep(Selection):
         r : array-like
             Array of the same length as x given distances to each object.
         """
+
         # ======================================
         #  find maximum of fg(x,r) = f(x,r)*g(r)
         # ======================================
