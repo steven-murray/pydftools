@@ -4,6 +4,7 @@ A module defining various plotting functions that generally act on a :class:`~df
 The primary function for general use is :func:`~mfplot`, which is a wrapper around :func:`~dfplot`, and shows a fitted
 mass function optionally with uncertainty region, and binned data, along with a histogram of data counts.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import poisson
@@ -386,7 +387,7 @@ def plot_hist(
         bins = np.linspace(dffit.data.x.min(), dffit.data.x.max(), nbins)
 
     hval, bin_edges, patches = ax.hist(
-        10 ** dffit.data.x if xpower10 else dffit.data.x, bins=bins, color=col_hist
+        10**dffit.data.x if xpower10 else dffit.data.x, bins=bins, color=col_hist
     )
     ax.get_yaxis().set_ticks([])
 
@@ -488,7 +489,7 @@ def plot_dfdata(
             f_16 = np.clip(f_16, pm, np.inf)
 
             def xpow(x):
-                return 10 ** x if xpower10 else x
+                return 10**x if xpower10 else x
 
             ax.errorbar(
                 xpow(bin_xmean),
