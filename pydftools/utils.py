@@ -76,7 +76,7 @@ def sample_ellipsoid(cov, size=1, add_boundaries=False, mean=None):
     # Do random points
     if size > 0:
         e = np.random.normal(size=(npar, size))
-        e /= np.sqrt(np.sum(e ** 2, axis=0))
+        e /= np.sqrt(np.sum(e**2, axis=0))
     else:
         e = np.zeros((npar, 0))
 

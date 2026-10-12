@@ -363,7 +363,7 @@ class DFFit(object):
     correct_lss_bias = attr.ib(default=False, converter=bool)
     ignore_uncertainties = attr.ib(default=False, converter=bool)
     lss_weight = attr.ib(
-        default=lambda x: 10 ** x,
+        default=lambda x: 10**x,
         validator=[attr.validators.optional(lambda s, a, v: callable(v))],
     )
 
@@ -543,9 +543,11 @@ class DFFit(object):
                 self.grid,
                 p,
                 self.model,
-                weight=self.lss_weight
-                if self.lss_weight is not None
-                else lambda x: np.ones_like(x),
+                weight=(
+                    self.lss_weight
+                    if self.lss_weight is not None
+                    else lambda x: np.ones_like(x)
+                ),
             )
             self.grid.veff = self.selection.Veff(*self.grid.x)
 
@@ -606,9 +608,11 @@ class DFFit(object):
                     self.grid,
                     p0,
                     self.model,
-                    weight=self.lss_weight
-                    if self.lss_weight is not None
-                    else lambda x: np.ones_like(x),
+                    weight=(
+                        self.lss_weight
+                        if self.lss_weight is not None
+                        else lambda x: np.ones_like(x)
+                    ),
                 )
 
                 self.grid.veff = self.selection.Veff(*self.grid.x)
@@ -715,9 +719,11 @@ class DFFit(object):
                 self.grid,
                 opt.x,
                 self.model,
-                weight=self.lss_weight
-                if self.lss_weight is not None
-                else lambda x: np.ones_like(x),
+                weight=(
+                    self.lss_weight
+                    if self.lss_weight is not None
+                    else lambda x: np.ones_like(x)
+                ),
             )
 
         fit = Fit(
@@ -1008,7 +1014,7 @@ class DFFit(object):
         )
         self.grid.scd_posterior = rho_unbiased
         self.grid.effective_counts = (
-            rho_unbiased ** 2 / rho_unbiased_sqr
+            rho_unbiased**2 / rho_unbiased_sqr
         )  # this equation gives the effective number of sources per bin
         self.grid.effective_counts[np.isinf(self.grid.effective_counts)] = 0
 
